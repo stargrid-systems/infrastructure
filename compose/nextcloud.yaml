@@ -1,0 +1,580 @@
+x-env:
+# Pair
+- &nc-pgtz "PGTZ=Europe/Zurich"
+- &nc-tz "TZ=Europe/Zurich"
+# Pair
+- &nc-apache-max-size "APACHE_MAX_SIZE=17179869184"
+- &nc-php-upload-limit "PHP_UPLOAD_LIMIT=16G"
+#
+- &nc-additional-apks "ADDITIONAL_APKS="
+- &nc-additional-php-extensions "ADDITIONAL_PHP_EXTENSIONS="
+- &nc-admin-password "ADMIN_PASSWORD="
+- &nc-apache-max-time "APACHE_MAX_TIME=3600"
+- &nc-apache-port "APACHE_PORT=443"
+- &nc-clamav-enabled "CLAMAV_ENABLED="
+- &nc-clamav-max-size "CLAMAV_MAX_SIZE=17179869184"
+- &nc-collabora-dictionaries "dictionaries=de_DE en_GB en_US es_ES fr_FR it nl pt_BR pt_PT ru"
+- &nc-collabora-enabled "COLLABORA_ENABLED=1"
+- &nc-es-java-opts "ES_JAVA_OPTS="
+- &nc-fulltextsearch-enabled "FULLTEXTSEARCH_ENABLED="
+- &nc-fulltextsearch-password "FULLTEXTSEARCH_PASSWORD="
+- &nc-imaginary-enabled "IMAGINARY_ENABLED="
+- &nc-imaginary-secret "IMAGINARY_SECRET="
+- &nc-install-latest-major "INSTALL_LATEST_MAJOR="
+- &nc-internal-secret "INTERNAL_SECRET="
+- &nc-jwt-secret "JWT_SECRET="
+- &nc-nextcloud-mount "NEXTCLOUD_MOUNT="
+- &nc-onlyoffice-enabled "ONLYOFFICE_ENABLED="
+- &nc-onlyoffice-secret "ONLYOFFICE_SECRET="
+- &nc-php-max-time "PHP_MAX_TIME=3600"
+- &nc-php-memory-limit "PHP_MEMORY_LIMIT="
+- &nc-postgres-password "POSTGRES_PASSWORD=postgres"
+- &nc-recording-secret "RECORDING_SECRET="
+- &nc-redis-host-password "REDIS_HOST_PASSWORD="
+- &nc-remove-disabled-apps "REMOVE_DISABLED_APPS="
+- &nc-signaling-secret "SIGNALING_SECRET="
+- &nc-startup-apps "STARTUP_APPS="
+- &nc-talk-enabled "TALK_ENABLED="
+- &nc-talk-port "TALK_PORT=3478"
+- &nc-talk-recording-enabled "TALK_RECORDING_ENABLED="
+- &nc-trusted-cacerts-dir "TRUSTED_CACERTS_DIR="
+- &nc-turn-secret "TURN_SECRET="
+- &nc-update-nextcloud-apps "UPDATE_NEXTCLOUD_APPS=no"
+- &nc-whiteboard-enabled "WHITEBOARD_ENABLED=yes"
+# Pair
+- &nc-whiteboard-secret "WHITEBOARD_SECRET="
+- &nc-whiteboard-jwt-secret-key "JWT_SECRET_KEY="
+# Domain related
+- &nc-domain "NC_DOMAIN=cloud.stargrid.systems"
+- &nc-overwritehost "OVERWRITEHOST=cloud.stargrid.systems"
+- &nc-aliasgroup1 "aliasgroup1=https://cloud.stargrid.systems:443,http://nextcloud-apache:23973"
+- &nc-extra-params "extra_params=--o:ssl.enable=false --o:ssl.termination=true --o:mount_jail_tree=false --o:logging.level=warning --o:logging.level_startup=warning --o:home_mode.enable=true --o:remote_font_config.url=https://cloud.stargrid.systems/apps/richdocuments/settings/fonts.json --o:net.post_allow.host[0]=.+"
+- &nc-server-name "server_name=cloud.stargrid.systems"
+- &nc-nextcloud-url "NEXTCLOUD_URL=https://cloud.stargrid.systems"
+
+services:
+  nextcloud-apache:
+    depends_on:
+      nextcloud-onlyoffice:
+        condition: "service_started"
+        required: false
+      nextcloud-collabora:
+        condition: "service_started"
+        required: false
+      nextcloud-talk:
+        condition: "service_started"
+        required: false
+      nextcloud-notify-push:
+        condition: "service_started"
+        required: false
+      nextcloud-whiteboard:
+        condition: "service_started"
+        required: false
+      nextcloud:
+        condition: "service_started"
+        required: false
+    image: "ghcr.io/nextcloud-releases/aio-apache:20251031_122139"
+    user: "33"
+    init: true
+    healthcheck:
+      start_period: "0s"
+      test: "/healthcheck.sh"
+      interval: "30s"
+      timeout: "30s"
+      start_interval: "5s"
+      retries: 3
+    expose:
+    - "443"
+    environment:
+    - "APACHE_HOST=nextcloud-apache"
+    - "COLLABORA_HOST=nextcloud-collabora"
+    - "NEXTCLOUD_HOST=nextcloud"
+    - "NOTIFY_PUSH_HOST=nextcloud-notify-push"
+    - "ONLYOFFICE_HOST=nextcloud-onlyoffice"
+    - "TALK_HOST=nextcloud-talk"
+    - "WHITEBOARD_HOST=nextcloud-whiteboard"
+    - *nc-apache-max-size
+    - *nc-apache-max-time
+    - *nc-apache-port
+    - *nc-domain
+    - *nc-tz
+    volumes:
+    - "nextcloud-data:/var/www/html:ro"
+    - "nextcloud-apache:/mnt/data:rw"
+    restart: "unless-stopped"
+    read_only: true
+    tmpfs:
+    - "/var/log/supervisord"
+    - "/var/run/supervisord"
+    - "/usr/local/apache2/logs"
+    - "/tmp"
+    - "/home/www-data"
+    cap_drop:
+    - "NET_RAW"
+    networks:
+    - "nextcloud"
+    - "cloudflared"
+
+  nextcloud-database:
+    image: "ghcr.io/nextcloud-releases/aio-postgresql:20251031_122139"
+    user: "999"
+    init: true
+    healthcheck:
+      start_period: "0s"
+      test: "/healthcheck.sh"
+      interval: "30s"
+      timeout: "30s"
+      start_interval: "5s"
+      retries: 3
+    expose:
+    - "5432"
+    volumes:
+    - "nextcloud-database:/var/lib/postgresql/data:rw"
+    - "nextcloud-database-dump:/mnt/data:rw"
+    environment:
+    - "POSTGRES_DB=nextcloud_database"
+    - "POSTGRES_USER=nextcloud"
+    - *nc-pgtz
+    - *nc-postgres-password
+    - *nc-tz
+    stop_grace_period: "1800s"
+    restart: "unless-stopped"
+    shm_size: 268435456
+    read_only: true
+    tmpfs:
+    - "/var/run/postgresql"
+    cap_drop:
+    - "NET_RAW"
+    networks:
+    - "nextcloud"
+
+  nextcloud:
+    depends_on:
+      nextcloud-database:
+        condition: "service_started"
+        required: false
+      nextcloud-redis:
+        condition: "service_started"
+        required: false
+      nextcloud-clamav:
+        condition: "service_started"
+        required: false
+      nextcloud-fulltextsearch:
+        condition: "service_started"
+        required: false
+      nextcloud-talk-recording:
+        condition: "service_started"
+        required: false
+      nextcloud-imaginary:
+        condition: "service_started"
+        required: false
+    image: "ghcr.io/nextcloud-releases/aio-nextcloud:20251031_122139"
+    init: true
+    healthcheck:
+      start_period: "0s"
+      test: "/healthcheck.sh"
+      interval: "30s"
+      timeout: "30s"
+      start_interval: "5s"
+      retries: 3
+    expose:
+    - "9000"
+    - "9001"
+    volumes:
+    - "nextcloud-html:/var/www/html:rw"
+    - "nextcloud-data:/mnt/ncdata:rw"
+    - "/usr/share/ca-certificates:/usr/local/share/ca-certificates:ro"
+    environment:
+    - "ADMIN_USER=admin"
+    - "APACHE_HOST=nextcloud-apache"
+    - "CLAMAV_HOST=nextcloud-clamav"
+    - "COLLABORA_HOST=nextcloud-collabora"
+    - "FULLTEXTSEARCH_HOST=nextcloud-fulltextsearch"
+    - "FULLTEXTSEARCH_INDEX=nextcloud"
+    - "FULLTEXTSEARCH_PORT=9200"
+    - "FULLTEXTSEARCH_USER=elastic"
+    - "IMAGINARY_HOST=nextcloud-imaginary"
+    - "NEXTCLOUD_DATA_DIR=/mnt/ncdata"
+    - "NEXTCLOUD_HOST=nextcloud"
+    - "ONLYOFFICE_HOST=nextcloud-onlyoffice"
+    - "OVERWRITEPROTOCOL=https"
+    - "POSTGRES_DB=nextcloud_database"
+    - "POSTGRES_HOST=nextcloud-database"
+    - "POSTGRES_PORT=5432"
+    - "POSTGRES_USER=nextcloud"
+    - "REDIS_HOST=nextcloud-redis"
+    - "TALK_RECORDING_HOST=nextcloud-talk-recording"
+    - *nc-additional-apks
+    - *nc-additional-php-extensions
+    - *nc-admin-password
+    - *nc-apache-port
+    - *nc-clamav-enabled
+    - *nc-clamav-max-size
+    - *nc-collabora-enabled
+    - *nc-domain
+    - *nc-fulltextsearch-enabled
+    - *nc-fulltextsearch-password
+    - *nc-imaginary-enabled
+    - *nc-imaginary-secret
+    - *nc-install-latest-major
+    - *nc-nextcloud-mount
+    - *nc-onlyoffice-enabled
+    - *nc-onlyoffice-secret
+    - *nc-overwritehost
+    - *nc-php-max-time
+    - *nc-php-memory-limit
+    - *nc-php-upload-limit
+    - *nc-postgres-password
+    - *nc-recording-secret
+    - *nc-redis-host-password
+    - *nc-remove-disabled-apps
+    - *nc-signaling-secret
+    - *nc-startup-apps
+    - *nc-talk-enabled
+    - *nc-talk-port
+    - *nc-talk-recording-enabled
+    - *nc-trusted-cacerts-dir
+    - *nc-turn-secret
+    - *nc-tz
+    - *nc-update-nextcloud-apps
+    - *nc-whiteboard-enabled
+    - *nc-whiteboard-secret
+    stop_grace_period: "600s"
+    restart: "unless-stopped"
+    cap_drop:
+    - "NET_RAW"
+    networks:
+    - "nextcloud"
+
+  nextcloud-notify-push:
+    image: "ghcr.io/nextcloud-releases/aio-notify-push:20251031_122139"
+    user: "33"
+    init: true
+    healthcheck:
+      start_period: "0s"
+      test: "/healthcheck.sh"
+      interval: "30s"
+      timeout: "30s"
+      start_interval: "5s"
+      retries: 3
+    expose:
+    - "7867"
+    volumes:
+    - "nextcloud-html:/nextcloud:ro"
+    environment:
+    - *nc-domain
+    - "NEXTCLOUD_HOST=nextcloud"
+    - *nc-tz
+    - "REDIS_HOST=nextcloud-redis"
+    - *nc-redis-host-password
+    - "POSTGRES_HOST=nextcloud-database"
+    - "POSTGRES_PORT=5432"
+    - *nc-postgres-password
+    - "POSTGRES_DB=nextcloud_database"
+    - "POSTGRES_USER=nextcloud"
+    restart: "unless-stopped"
+    read_only: true
+    cap_drop:
+    - "NET_RAW"
+    networks:
+    - "nextcloud"
+
+  nextcloud-redis:
+    image: "ghcr.io/nextcloud-releases/aio-redis:20251031_122139"
+    user: "999"
+    init: true
+    healthcheck:
+      start_period: "0s"
+      test: "/healthcheck.sh"
+      interval: "30s"
+      timeout: "30s"
+      start_interval: "5s"
+      retries: 3
+    expose:
+    - "6379"
+    environment:
+    - *nc-redis-host-password
+    - *nc-tz
+    volumes:
+    - "nextcloud-redis:/data:rw"
+    restart: "unless-stopped"
+    read_only: true
+    cap_drop:
+    - "NET_RAW"
+    networks:
+    - "nextcloud"
+
+  nextcloud-collabora:
+    image: "ghcr.io/nextcloud-releases/aio-collabora:20251031_122139"
+    command: [ "--o:security.seccomp=true" ]
+    init: true
+    healthcheck:
+      start_period: "60s"
+      test: "/healthcheck.sh"
+      interval: "30s"
+      timeout: "30s"
+      start_interval: "5s"
+      retries: 9
+    expose:
+    - "9980"
+    environment:
+    - *nc-aliasgroup1
+    - *nc-extra-params
+    - *nc-collabora-dictionaries
+    - *nc-tz
+    - *nc-server-name
+    - "DONT_GEN_SSL_CERT=1"
+    restart: "unless-stopped"
+    profiles:
+    - "collabora"
+    cap_add:
+    - "MKNOD"
+    - "SYS_ADMIN"
+    - "SYS_CHROOT"
+    - "FOWNER"
+    - "CHOWN"
+    cap_drop:
+    - "NET_RAW"
+    networks:
+    - "nextcloud"
+
+  nextcloud-talk:
+    image: "ghcr.io/nextcloud-releases/aio-talk:20251031_122139"
+    user: "1000"
+    init: true
+    healthcheck:
+      start_period: "0s"
+      test: "/healthcheck.sh"
+      interval: "30s"
+      timeout: "30s"
+      start_interval: "5s"
+      retries: 3
+    expose:
+    - "8081"
+    - "3478"
+    environment:
+    - *nc-domain
+    - "TALK_HOST=nextcloud-talk"
+    - *nc-turn-secret
+    - *nc-signaling-secret
+    - *nc-tz
+    - *nc-talk-port
+    - *nc-internal-secret
+    restart: "unless-stopped"
+    profiles:
+    - "talk"
+    - "talk-recording"
+    read_only: true
+    tmpfs:
+    - "/var/log/supervisord"
+    - "/var/run/supervisord"
+    - "/opt/eturnal/run"
+    - "/conf"
+    - "/tmp"
+    cap_drop:
+    - "NET_RAW"
+    networks:
+    - "nextcloud"
+    - "cloudflared"
+
+  nextcloud-talk-recording:
+    image: "ghcr.io/nextcloud-releases/aio-talk-recording:20251031_122139"
+    user: "122"
+    init: true
+    healthcheck:
+      start_period: "0s"
+      test: "/healthcheck.sh"
+      interval: "30s"
+      timeout: "30s"
+      start_interval: "5s"
+      retries: 3
+    expose:
+    - "1234"
+    environment:
+    - *nc-domain
+    - *nc-tz
+    - *nc-recording-secret
+    - *nc-internal-secret
+    volumes:
+    - "nextcloud-talk-recording:/tmp:rw"
+    shm_size: 2147483648
+    restart: "unless-stopped"
+    profiles:
+    - "talk-recording"
+    read_only: true
+    tmpfs:
+    - "/conf"
+    cap_drop:
+    - "NET_RAW"
+    networks:
+    - "nextcloud"
+
+  nextcloud-clamav:
+    image: "ghcr.io/nextcloud-releases/aio-clamav:20251031_122139"
+    user: "100"
+    init: false
+    healthcheck:
+      start_period: "60s"
+      test: "/healthcheck.sh"
+      interval: "30s"
+      timeout: "30s"
+      start_interval: "5s"
+      retries: 9
+    expose:
+    - "3310"
+    environment:
+    - *nc-tz
+    - "MAX_SIZE="
+    volumes:
+    - "nextcloud-clamav:/var/lib/clamav:rw"
+    restart: "unless-stopped"
+    profiles:
+    - "clamav"
+    read_only: true
+    tmpfs:
+    - "/tmp"
+    - "/var/log/clamav"
+    - "/run/clamav"
+    - "/var/log/supervisord"
+    - "/var/run/supervisord"
+    cap_drop:
+    - "NET_RAW"
+    networks:
+    - "nextcloud"
+
+  nextcloud-onlyoffice:
+    image: "ghcr.io/nextcloud-releases/aio-onlyoffice:20251031_122139"
+    init: true
+    healthcheck:
+      start_period: "60s"
+      test: "/healthcheck.sh"
+      interval: "30s"
+      timeout: "30s"
+      start_interval: "5s"
+      retries: 9
+    expose:
+    - "80"
+    environment:
+    - *nc-tz
+    - "JWT_ENABLED=true"
+    - "JWT_HEADER=AuthorizationJwt"
+    - *nc-jwt-secret
+    volumes:
+    - "nextcloud-onlyoffice:/var/lib/onlyoffice:rw"
+    restart: "unless-stopped"
+    profiles:
+    - "onlyoffice"
+    cap_drop:
+    - "NET_RAW"
+    networks:
+    - "nextcloud"
+
+  nextcloud-imaginary:
+    image: "ghcr.io/nextcloud-releases/aio-imaginary:20251031_122139"
+    user: "65534"
+    init: true
+    healthcheck:
+      start_period: "0s"
+      test: "/healthcheck.sh"
+      interval: "30s"
+      timeout: "30s"
+      start_interval: "5s"
+      retries: 3
+    expose:
+    - "9000"
+    environment:
+    - *nc-tz
+    - *nc-imaginary-secret
+    restart: "unless-stopped"
+    cap_add:
+    - "SYS_NICE"
+    cap_drop:
+    - "NET_RAW"
+    profiles:
+    - "imaginary"
+    read_only: true
+    tmpfs:
+    - "/tmp"
+    networks:
+    - "nextcloud"
+
+  nextcloud-fulltextsearch:
+    image: "ghcr.io/nextcloud-releases/aio-fulltextsearch:20251031_122139"
+    init: false
+    healthcheck:
+      start_period: "60s"
+      test: "/healthcheck.sh"
+      interval: "10s"
+      timeout: "5s"
+      start_interval: "5s"
+      retries: 5
+    expose:
+    - "9200"
+    environment:
+    - "bootstrap.memory_lock=true"
+    - "cluster.name=nextcloud"
+    - "discovery.type=single-node"
+    - "http.port=9200"
+    - "logger.level=WARN"
+    - "xpack.license.self_generated.type=basic"
+    - "xpack.security.enabled=false"
+    - *nc-es-java-opts
+    - *nc-fulltextsearch-password
+    - *nc-tz
+    volumes:
+    - "nextcloud-elasticsearch:/usr/share/elasticsearch/data:rw"
+    restart: "unless-stopped"
+    profiles:
+    - "fulltextsearch"
+    cap_drop:
+    - "NET_RAW"
+    networks:
+    - "nextcloud"
+
+  nextcloud-whiteboard:
+    image: "ghcr.io/nextcloud-releases/aio-whiteboard:20251031_122139"
+    user: "65534"
+    init: true
+    healthcheck:
+      start_period: "0s"
+      test: "/healthcheck.sh"
+      interval: "30s"
+      timeout: "30s"
+      start_interval: "5s"
+      retries: 3
+    expose:
+    - "3002"
+    tmpfs:
+    - "/tmp"
+    environment:
+    - "BACKUP_DIR=/tmp"
+    - "REDIS_HOST=nextcloud-redis"
+    - "STORAGE_STRATEGY=redis"
+    - *nc-redis-host-password
+    - *nc-tz
+    - *nc-whiteboard-jwt-secret-key
+    - *nc-nextcloud-url
+    restart: "unless-stopped"
+    read_only: true
+    cap_drop:
+    - "NET_RAW"
+    networks:
+    - "nextcloud"
+
+networks:
+  nextcloud:
+    internal: true
+  cloudflared:
+    external: true
+
+volumes:
+  nextcloud-apache:
+  nextcloud-clamav:
+  nextcloud-html:
+  nextcloud-data:
+  nextcloud-database-dump:
+  nextcloud-database:
+  nextcloud-elasticsearch:
+  nextcloud-onlyoffice:
+  nextcloud-redis:
+  nextcloud-talk-recording:
