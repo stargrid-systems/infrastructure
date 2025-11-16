@@ -1,0 +1,25 @@
+include:
+- "common/forgejo.yaml"
+
+services:
+  cloudflared:
+    image: "cloudflare/cloudflared:2025.11.1"
+    restart: "unless-stopped"
+    command: ["tunnel", "run"]
+    environment:
+    - "TUNNEL_TOKEN_FILE=/run/secrets/cloudflared-token"
+    secrets:
+    - "cloudflared-token"
+    networks:
+    - "internet"
+    - "cloudflared"
+
+networks:
+  internet:
+    internal: false
+  cloudflared:
+    internal: true
+
+secrets:
+  cloudflared-token:
+    environment: "CLOUDFLARED_TOKEN"
