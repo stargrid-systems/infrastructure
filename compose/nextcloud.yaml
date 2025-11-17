@@ -1,63 +1,9 @@
-x-env:
-# Pair
-- &nc-pgtz "PGTZ=Europe/Zurich"
-- &nc-tz "TZ=Europe/Zurich"
-# Pair
-- &nc-apache-max-size "APACHE_MAX_SIZE=17179869184"
-- &nc-php-upload-limit "PHP_UPLOAD_LIMIT=16G"
-#
-- &nc-additional-apks "ADDITIONAL_APKS="
-- &nc-additional-php-extensions "ADDITIONAL_PHP_EXTENSIONS="
-- &nc-admin-password "ADMIN_PASSWORD="
-- &nc-apache-max-time "APACHE_MAX_TIME=3600"
-- &nc-apache-port "APACHE_PORT=443"
-- &nc-clamav-enabled "CLAMAV_ENABLED="
-- &nc-clamav-max-size "CLAMAV_MAX_SIZE=17179869184"
-- &nc-collabora-dictionaries "dictionaries=de_DE en_GB en_US es_ES fr_FR it nl pt_BR pt_PT ru"
-- &nc-collabora-enabled "COLLABORA_ENABLED=1"
-- &nc-es-java-opts "ES_JAVA_OPTS="
-- &nc-fulltextsearch-enabled "FULLTEXTSEARCH_ENABLED="
-- &nc-fulltextsearch-password "FULLTEXTSEARCH_PASSWORD="
-- &nc-imaginary-enabled "IMAGINARY_ENABLED="
-- &nc-imaginary-secret "IMAGINARY_SECRET="
-- &nc-install-latest-major "INSTALL_LATEST_MAJOR="
-- &nc-internal-secret "INTERNAL_SECRET="
-- &nc-jwt-secret "JWT_SECRET="
-- &nc-nextcloud-mount "NEXTCLOUD_MOUNT="
-- &nc-onlyoffice-enabled "ONLYOFFICE_ENABLED="
-- &nc-onlyoffice-secret "ONLYOFFICE_SECRET="
-- &nc-php-max-time "PHP_MAX_TIME=3600"
-- &nc-php-memory-limit "PHP_MEMORY_LIMIT="
-- &nc-postgres-password "POSTGRES_PASSWORD=postgres"
-- &nc-recording-secret "RECORDING_SECRET="
-- &nc-redis-host-password "REDIS_HOST_PASSWORD="
-- &nc-remove-disabled-apps "REMOVE_DISABLED_APPS="
-- &nc-signaling-secret "SIGNALING_SECRET="
-- &nc-startup-apps "STARTUP_APPS="
-- &nc-talk-enabled "TALK_ENABLED="
-- &nc-talk-port "TALK_PORT=3478"
-- &nc-talk-recording-enabled "TALK_RECORDING_ENABLED="
-- &nc-trusted-cacerts-dir "TRUSTED_CACERTS_DIR="
-- &nc-turn-secret "TURN_SECRET="
-- &nc-update-nextcloud-apps "UPDATE_NEXTCLOUD_APPS=no"
-- &nc-whiteboard-enabled "WHITEBOARD_ENABLED=yes"
-# Pair
-- &nc-whiteboard-secret "WHITEBOARD_SECRET="
-- &nc-whiteboard-jwt-secret-key "JWT_SECRET_KEY="
-# Domain related
-- &nc-domain "NC_DOMAIN=cloud.stargrid.systems"
-- &nc-overwritehost "OVERWRITEHOST=cloud.stargrid.systems"
-- &nc-aliasgroup1 "aliasgroup1=https://cloud.stargrid.systems:443,http://nextcloud-apache:23973"
-- &nc-extra-params "extra_params=--o:ssl.enable=false --o:ssl.termination=true --o:mount_jail_tree=false --o:logging.level=warning --o:logging.level_startup=warning --o:home_mode.enable=true --o:remote_font_config.url=https://cloud.stargrid.systems/apps/richdocuments/settings/fonts.json --o:net.post_allow.host[0]=.+"
-- &nc-server-name "server_name=cloud.stargrid.systems"
-- &nc-nextcloud-url "NEXTCLOUD_URL=https://cloud.stargrid.systems"
-
 services:
   nextcloud-apache:
     depends_on:
-      nextcloud-onlyoffice:
-        condition: "service_started"
-        required: false
+      # nextcloud-onlyoffice:
+      #   condition: "service_started"
+      #   required: false
       nextcloud-collabora:
         condition: "service_started"
         required: false
@@ -70,7 +16,7 @@ services:
       nextcloud-whiteboard:
         condition: "service_started"
         required: false
-      nextcloud:
+      nextcloud-nextcloud:
         condition: "service_started"
         required: false
     image: "ghcr.io/nextcloud-releases/aio-apache:20251031_122139"
@@ -84,22 +30,23 @@ services:
       start_interval: "5s"
       retries: 3
     expose:
-    - "443"
+    - "${NC_APACHE_PORT}/tcp"
+    - "${NC_APACHE_PORT}/udp"
     environment:
+    - "NC_DOMAIN=${NC_DOMAIN}"
+    - "NEXTCLOUD_HOST=nextcloud-nextcloud"
     - "APACHE_HOST=nextcloud-apache"
     - "COLLABORA_HOST=nextcloud-collabora"
-    - "NEXTCLOUD_HOST=nextcloud"
-    - "NOTIFY_PUSH_HOST=nextcloud-notify-push"
-    - "ONLYOFFICE_HOST=nextcloud-onlyoffice"
     - "TALK_HOST=nextcloud-talk"
+    - "APACHE_PORT=${NC_APACHE_PORT}"
+    - "ONLYOFFICE_HOST=nextcloud-onlyoffice"
+    - "TZ=${NC_TIMEZONE}"
+    - "APACHE_MAX_SIZE=${NC_APACHE_MAX_SIZE}"
+    - "APACHE_MAX_TIME=${NC_NEXTCLOUD_MAX_TIME}"
+    - "NOTIFY_PUSH_HOST=nextcloud-notify-push"
     - "WHITEBOARD_HOST=nextcloud-whiteboard"
-    - *nc-apache-max-size
-    - *nc-apache-max-time
-    - *nc-apache-port
-    - *nc-domain
-    - *nc-tz
     volumes:
-    - "nextcloud-data:/var/www/html:ro"
+    - "nextcloud-nextcloud:/var/www/html:ro"
     - "nextcloud-apache:/mnt/data:rw"
     restart: "unless-stopped"
     read_only: true
@@ -112,8 +59,8 @@ services:
     cap_drop:
     - "NET_RAW"
     networks:
-    - "nextcloud"
     - "cloudflared"
+    - "nextcloud"
 
   nextcloud-database:
     image: "ghcr.io/nextcloud-releases/aio-postgresql:20251031_122139"
@@ -132,11 +79,11 @@ services:
     - "nextcloud-database:/var/lib/postgresql/data:rw"
     - "nextcloud-database-dump:/mnt/data:rw"
     environment:
+    - "POSTGRES_PASSWORD=${NC_DATABASE_PASSWORD}"
     - "POSTGRES_DB=nextcloud_database"
     - "POSTGRES_USER=nextcloud"
-    - *nc-pgtz
-    - *nc-postgres-password
-    - *nc-tz
+    - "TZ=${NC_TIMEZONE}"
+    - "PGTZ=${NC_TIMEZONE}"
     stop_grace_period: "1800s"
     restart: "unless-stopped"
     shm_size: 268435456
@@ -148,7 +95,7 @@ services:
     networks:
     - "nextcloud"
 
-  nextcloud:
+  nextcloud-nextcloud:
     depends_on:
       nextcloud-database:
         condition: "service_started"
@@ -181,69 +128,69 @@ services:
     - "9000"
     - "9001"
     volumes:
-    - "nextcloud-html:/var/www/html:rw"
-    - "nextcloud-data:/mnt/ncdata:rw"
-    - "/usr/share/ca-certificates:/usr/local/share/ca-certificates:ro"
+    - "nextcloud-nextcloud:/var/www/html:rw"
+    - "nextcloud-nextcloud-data:/mnt/ncdata:rw"
+    # - "${NC_NEXTCLOUD_TRUSTED_CACERTS_DIR}:/usr/local/share/ca-certificates:ro"
     environment:
-    - "ADMIN_USER=admin"
-    - "APACHE_HOST=nextcloud-apache"
-    - "CLAMAV_HOST=nextcloud-clamav"
-    - "COLLABORA_HOST=nextcloud-collabora"
-    - "FULLTEXTSEARCH_HOST=nextcloud-fulltextsearch"
-    - "FULLTEXTSEARCH_INDEX=nextcloud"
-    - "FULLTEXTSEARCH_PORT=9200"
-    - "FULLTEXTSEARCH_USER=elastic"
-    - "IMAGINARY_HOST=nextcloud-imaginary"
-    - "NEXTCLOUD_DATA_DIR=/mnt/ncdata"
-    - "NEXTCLOUD_HOST=nextcloud"
-    - "ONLYOFFICE_HOST=nextcloud-onlyoffice"
-    - "OVERWRITEPROTOCOL=https"
-    - "POSTGRES_DB=nextcloud_database"
+    - "NEXTCLOUD_HOST=nextcloud-nextcloud"
     - "POSTGRES_HOST=nextcloud-database"
     - "POSTGRES_PORT=5432"
+    - "POSTGRES_PASSWORD=${NC_DATABASE_PASSWORD}"
+    - "POSTGRES_DB=nextcloud_database"
     - "POSTGRES_USER=nextcloud"
     - "REDIS_HOST=nextcloud-redis"
+    - "REDIS_HOST_PASSWORD=${NC_REDIS_PASSWORD}"
+    - "APACHE_HOST=nextcloud-apache"
+    - "APACHE_PORT=${NC_APACHE_PORT}"
+    - "NC_DOMAIN=${NC_DOMAIN}"
+    - "ADMIN_USER=admin"
+    - "ADMIN_PASSWORD=${NC_NEXTCLOUD_PASSWORD}"
+    - "NEXTCLOUD_DATA_DIR=/mnt/ncdata"
+    - "OVERWRITEHOST=${NC_DOMAIN}"
+    - "OVERWRITEPROTOCOL=https"
+    - "TURN_SECRET=${NC_TURN_SECRET}"
+    - "SIGNALING_SECRET=${NC_SIGNALING_SECRET}"
+    - "ONLYOFFICE_SECRET=${NC_ONLYOFFICE_SECRET}"
+    - "CLAMAV_ENABLED=${NC_CLAMAV_ENABLED}"
+    - "CLAMAV_HOST=nextcloud-clamav"
+    - "ONLYOFFICE_ENABLED=${NC_ONLYOFFICE_ENABLED}"
+    - "COLLABORA_ENABLED=${NC_COLLABORA_ENABLED}"
+    - "COLLABORA_HOST=nextcloud-collabora"
+    - "TALK_ENABLED=${NC_TALK_ENABLED}"
+    - "ONLYOFFICE_HOST=nextcloud-onlyoffice"
+    - "UPDATE_NEXTCLOUD_APPS=${NC_UPDATE_NEXTCLOUD_APPS}"
+    - "TZ=${NC_TIMEZONE}"
+    - "TALK_PORT=${NC_TALK_PORT}"
+    - "IMAGINARY_ENABLED=${NC_IMAGINARY_ENABLED}"
+    - "IMAGINARY_HOST=nextcloud-imaginary"
+    - "CLAMAV_MAX_SIZE=${NC_APACHE_MAX_SIZE}"
+    - "PHP_UPLOAD_LIMIT=${NC_NEXTCLOUD_UPLOAD_LIMIT}"
+    - "PHP_MEMORY_LIMIT=${NC_NEXTCLOUD_MEMORY_LIMIT}"
+    - "FULLTEXTSEARCH_ENABLED=${NC_FULLTEXTSEARCH_ENABLED}"
+    - "FULLTEXTSEARCH_HOST=nextcloud-fulltextsearch"
+    - "FULLTEXTSEARCH_PORT=9200"
+    - "FULLTEXTSEARCH_USER=elastic"
+    - "FULLTEXTSEARCH_INDEX=nextcloud"
+    - "PHP_MAX_TIME=${NC_NEXTCLOUD_MAX_TIME}"
+    # - "TRUSTED_CACERTS_DIR=${NC_NEXTCLOUD_TRUSTED_CACERTS_DIR}"
+    - "STARTUP_APPS=${NC_NEXTCLOUD_STARTUP_APPS}"
+    - "ADDITIONAL_APKS=${NC_NEXTCLOUD_ADDITIONAL_APKS}"
+    - "ADDITIONAL_PHP_EXTENSIONS=${NC_NEXTCLOUD_ADDITIONAL_PHP_EXTENSIONS}"
+    - "INSTALL_LATEST_MAJOR=${NC_INSTALL_LATEST_MAJOR}"
+    - "TALK_RECORDING_ENABLED=${NC_TALK_RECORDING_ENABLED}"
+    - "RECORDING_SECRET=${NC_RECORDING_SECRET}"
     - "TALK_RECORDING_HOST=nextcloud-talk-recording"
-    - *nc-additional-apks
-    - *nc-additional-php-extensions
-    - *nc-admin-password
-    - *nc-apache-port
-    - *nc-clamav-enabled
-    - *nc-clamav-max-size
-    - *nc-collabora-enabled
-    - *nc-domain
-    - *nc-fulltextsearch-enabled
-    - *nc-fulltextsearch-password
-    - *nc-imaginary-enabled
-    - *nc-imaginary-secret
-    - *nc-install-latest-major
-    - *nc-nextcloud-mount
-    - *nc-onlyoffice-enabled
-    - *nc-onlyoffice-secret
-    - *nc-overwritehost
-    - *nc-php-max-time
-    - *nc-php-memory-limit
-    - *nc-php-upload-limit
-    - *nc-postgres-password
-    - *nc-recording-secret
-    - *nc-redis-host-password
-    - *nc-remove-disabled-apps
-    - *nc-signaling-secret
-    - *nc-startup-apps
-    - *nc-talk-enabled
-    - *nc-talk-port
-    - *nc-talk-recording-enabled
-    - *nc-trusted-cacerts-dir
-    - *nc-turn-secret
-    - *nc-tz
-    - *nc-update-nextcloud-apps
-    - *nc-whiteboard-enabled
-    - *nc-whiteboard-secret
+    - "FULLTEXTSEARCH_PASSWORD=${NC_FULLTEXTSEARCH_PASSWORD}"
+    - "REMOVE_DISABLED_APPS=${NC_REMOVE_DISABLED_APPS}"
+    - "IMAGINARY_SECRET=${NC_IMAGINARY_SECRET}"
+    - "WHITEBOARD_SECRET=${NC_WHITEBOARD_SECRET}"
+    - "WHITEBOARD_ENABLED=${NC_WHITEBOARD_ENABLED}"
     stop_grace_period: "600s"
     restart: "unless-stopped"
     cap_drop:
     - "NET_RAW"
     networks:
+    - "internet"
     - "nextcloud"
 
   nextcloud-notify-push:
@@ -260,16 +207,16 @@ services:
     expose:
     - "7867"
     volumes:
-    - "nextcloud-html:/nextcloud:ro"
+    - "nextcloud-nextcloud:/nextcloud:ro"
     environment:
-    - *nc-domain
-    - "NEXTCLOUD_HOST=nextcloud"
-    - *nc-tz
+    - "NC_DOMAIN=${NC_DOMAIN}"
+    - "NEXTCLOUD_HOST=nextcloud-nextcloud"
+    - "TZ=${NC_TIMEZONE}"
     - "REDIS_HOST=nextcloud-redis"
-    - *nc-redis-host-password
+    - "REDIS_HOST_PASSWORD=${NC_REDIS_PASSWORD}"
     - "POSTGRES_HOST=nextcloud-database"
     - "POSTGRES_PORT=5432"
-    - *nc-postgres-password
+    - "POSTGRES_PASSWORD=${NC_DATABASE_PASSWORD}"
     - "POSTGRES_DB=nextcloud_database"
     - "POSTGRES_USER=nextcloud"
     restart: "unless-stopped"
@@ -293,8 +240,8 @@ services:
     expose:
     - "6379"
     environment:
-    - *nc-redis-host-password
-    - *nc-tz
+    - "REDIS_HOST_PASSWORD=${NC_REDIS_PASSWORD}"
+    - "TZ=${NC_TIMEZONE}"
     volumes:
     - "nextcloud-redis:/data:rw"
     restart: "unless-stopped"
@@ -305,8 +252,8 @@ services:
     - "nextcloud"
 
   nextcloud-collabora:
+    command: "${NC_ADDITIONAL_COLLABORA_OPTIONS}"
     image: "ghcr.io/nextcloud-releases/aio-collabora:20251031_122139"
-    command: [ "--o:security.seccomp=true" ]
     init: true
     healthcheck:
       start_period: "60s"
@@ -318,15 +265,13 @@ services:
     expose:
     - "9980"
     environment:
-    - *nc-aliasgroup1
-    - *nc-extra-params
-    - *nc-collabora-dictionaries
-    - *nc-tz
-    - *nc-server-name
+    - "aliasgroup1=https://${NC_DOMAIN}:443,http://nextcloud-apache:23973"
+    - "extra_params=--o:ssl.enable=false --o:ssl.termination=true --o:mount_jail_tree=false --o:logging.level=warning --o:logging.level_startup=warning --o:home_mode.enable=true --o:remote_font_config.url=https://${NC_DOMAIN}/apps/richdocuments/settings/fonts.json --o:net.post_allow.host[0]=.+"
+    - "dictionaries=${NC_COLLABORA_DICTIONARIES}"
+    - "TZ=${NC_TIMEZONE}"
+    - "server_name=${NC_DOMAIN}"
     - "DONT_GEN_SSL_CERT=1"
     restart: "unless-stopped"
-    profiles:
-    - "collabora"
     cap_add:
     - "MKNOD"
     - "SYS_ADMIN"
@@ -336,6 +281,7 @@ services:
     cap_drop:
     - "NET_RAW"
     networks:
+    - "internet"
     - "nextcloud"
 
   nextcloud-talk:
@@ -350,20 +296,18 @@ services:
       start_interval: "5s"
       retries: 3
     expose:
+    - "${NC_TALK_PORT}/tcp"
+    - "${NC_TALK_PORT}/udp"
     - "8081"
-    - "3478"
     environment:
-    - *nc-domain
+    - "NC_DOMAIN=${NC_DOMAIN}"
     - "TALK_HOST=nextcloud-talk"
-    - *nc-turn-secret
-    - *nc-signaling-secret
-    - *nc-tz
-    - *nc-talk-port
-    - *nc-internal-secret
+    - "TURN_SECRET=${NC_TURN_SECRET}"
+    - "SIGNALING_SECRET=${NC_SIGNALING_SECRET}"
+    - "TZ=${NC_TIMEZONE}"
+    - "TALK_PORT=${NC_TALK_PORT}"
+    - "INTERNAL_SECRET=${NC_TALK_INTERNAL_SECRET}"
     restart: "unless-stopped"
-    profiles:
-    - "talk"
-    - "talk-recording"
     read_only: true
     tmpfs:
     - "/var/log/supervisord"
@@ -374,8 +318,8 @@ services:
     cap_drop:
     - "NET_RAW"
     networks:
-    - "nextcloud"
     - "cloudflared"
+    - "nextcloud"
 
   nextcloud-talk-recording:
     image: "ghcr.io/nextcloud-releases/aio-talk-recording:20251031_122139"
@@ -391,16 +335,14 @@ services:
     expose:
     - "1234"
     environment:
-    - *nc-domain
-    - *nc-tz
-    - *nc-recording-secret
-    - *nc-internal-secret
+    - "NC_DOMAIN=${NC_DOMAIN}"
+    - "TZ=${NC_TIMEZONE}"
+    - "RECORDING_SECRET=${NC_RECORDING_SECRET}"
+    - "INTERNAL_SECRET=${NC_TALK_INTERNAL_SECRET}"
     volumes:
     - "nextcloud-talk-recording:/tmp:rw"
     shm_size: 2147483648
     restart: "unless-stopped"
-    profiles:
-    - "talk-recording"
     read_only: true
     tmpfs:
     - "/conf"
@@ -423,13 +365,11 @@ services:
     expose:
     - "3310"
     environment:
-    - *nc-tz
-    - "MAX_SIZE="
+    - "TZ=${NC_TIMEZONE}"
+    - "MAX_SIZE=${NC_NEXTCLOUD_UPLOAD_LIMIT}"
     volumes:
     - "nextcloud-clamav:/var/lib/clamav:rw"
     restart: "unless-stopped"
-    profiles:
-    - "clamav"
     read_only: true
     tmpfs:
     - "/tmp"
@@ -440,34 +380,34 @@ services:
     cap_drop:
     - "NET_RAW"
     networks:
+    - "internet"
     - "nextcloud"
 
-  nextcloud-onlyoffice:
-    image: "ghcr.io/nextcloud-releases/aio-onlyoffice:20251031_122139"
-    init: true
-    healthcheck:
-      start_period: "60s"
-      test: "/healthcheck.sh"
-      interval: "30s"
-      timeout: "30s"
-      start_interval: "5s"
-      retries: 9
-    expose:
-    - "80"
-    environment:
-    - *nc-tz
-    - "JWT_ENABLED=true"
-    - "JWT_HEADER=AuthorizationJwt"
-    - *nc-jwt-secret
-    volumes:
-    - "nextcloud-onlyoffice:/var/lib/onlyoffice:rw"
-    restart: "unless-stopped"
-    profiles:
-    - "onlyoffice"
-    cap_drop:
-    - "NET_RAW"
-    networks:
-    - "nextcloud"
+  # nextcloud-onlyoffice:
+  #   image: "ghcr.io/nextcloud-releases/aio-onlyoffice:20251031_122139"
+  #   init: true
+  #   healthcheck:
+  #     start_period: "60s"
+  #     test: "/healthcheck.sh"
+  #     interval: "30s"
+  #     timeout: "30s"
+  #     start_interval: "5s"
+  #     retries: 9
+  #   expose:
+  #   - "80"
+  #   environment:
+  #   - "TZ=${NC_TIMEZONE}"
+  #   - "JWT_ENABLED=true"
+  #   - "JWT_HEADER=AuthorizationJwt"
+  #   - "JWT_SECRET=${NC_ONLYOFFICE_SECRET}"
+  #   volumes:
+  #   - "nextcloud-onlyoffice:/var/lib/onlyoffice:rw"
+  #   restart: "unless-stopped"
+  #   cap_drop:
+  #   - "NET_RAW"
+  #   networks:
+  #   - "internet"
+  #   - "nextcloud"
 
   nextcloud-imaginary:
     image: "ghcr.io/nextcloud-releases/aio-imaginary:20251031_122139"
@@ -483,20 +423,18 @@ services:
     expose:
     - "9000"
     environment:
-    - *nc-tz
-    - *nc-imaginary-secret
+    - "TZ=${NC_TIMEZONE}"
+    - "IMAGINARY_SECRET=${NC_IMAGINARY_SECRET}"
     restart: "unless-stopped"
     cap_add:
     - "SYS_NICE"
     cap_drop:
     - "NET_RAW"
-    profiles:
-    - "imaginary"
+    networks:
+    - "nextcloud"
     read_only: true
     tmpfs:
     - "/tmp"
-    networks:
-    - "nextcloud"
 
   nextcloud-fulltextsearch:
     image: "ghcr.io/nextcloud-releases/aio-fulltextsearch:20251031_122139"
@@ -511,21 +449,19 @@ services:
     expose:
     - "9200"
     environment:
+    - "TZ=${NC_TIMEZONE}"
+    - "ES_JAVA_OPTS=${NC_FULLTEXTSEARCH_JAVA_OPTIONS}"
     - "bootstrap.memory_lock=true"
     - "cluster.name=nextcloud"
     - "discovery.type=single-node"
-    - "http.port=9200"
     - "logger.level=WARN"
+    - "http.port=9200"
     - "xpack.license.self_generated.type=basic"
     - "xpack.security.enabled=false"
-    - *nc-es-java-opts
-    - *nc-fulltextsearch-password
-    - *nc-tz
+    - "FULLTEXTSEARCH_PASSWORD=${NC_FULLTEXTSEARCH_PASSWORD}"
     volumes:
     - "nextcloud-elasticsearch:/usr/share/elasticsearch/data:rw"
     restart: "unless-stopped"
-    profiles:
-    - "fulltextsearch"
     cap_drop:
     - "NET_RAW"
     networks:
@@ -547,13 +483,13 @@ services:
     tmpfs:
     - "/tmp"
     environment:
-    - "BACKUP_DIR=/tmp"
-    - "REDIS_HOST=nextcloud-redis"
+    - "TZ=${NC_TIMEZONE}"
+    - "NEXTCLOUD_URL=https://${NC_DOMAIN}"
+    - "JWT_SECRET_KEY=${NC_WHITEBOARD_SECRET}"
     - "STORAGE_STRATEGY=redis"
-    - *nc-redis-host-password
-    - *nc-tz
-    - *nc-whiteboard-jwt-secret-key
-    - *nc-nextcloud-url
+    - "REDIS_HOST=nextcloud-redis"
+    - "REDIS_HOST_PASSWORD=${NC_REDIS_PASSWORD}"
+    - "BACKUP_DIR=/tmp"
     restart: "unless-stopped"
     read_only: true
     cap_drop:
@@ -561,20 +497,19 @@ services:
     networks:
     - "nextcloud"
 
-networks:
-  nextcloud:
-    internal: true
-  cloudflared:
-    external: true
-
 volumes:
   nextcloud-apache:
   nextcloud-clamav:
-  nextcloud-html:
-  nextcloud-data:
-  nextcloud-database-dump:
   nextcloud-database:
+  nextcloud-database-dump:
   nextcloud-elasticsearch:
+  nextcloud-nextcloud:
   nextcloud-onlyoffice:
   nextcloud-redis:
   nextcloud-talk-recording:
+  nextcloud-nextcloud-data:
+
+
+networks:
+  nextcloud:
+    internal: true
