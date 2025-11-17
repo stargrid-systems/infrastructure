@@ -1,5 +1,6 @@
 include:
-- "common/forgejo.yaml"
+- "compose/forgejo.yaml"
+- "compose/nextcloud.yaml"
 
 services:
   cloudflared:
