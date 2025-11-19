@@ -19,7 +19,7 @@ services:
     - "FORGEJO__database__USER=forgejo"
     - "FORGEJO__database__PASSWD=forgejo"
     networks:
-    - "cloudflared"
+    - "core_cloudflared"
     - "forgejo"
     volumes:
     - "forgejo-data:/data"
@@ -43,6 +43,9 @@ services:
     - "forgejo-database-data:/var/lib/postgresql/18/docker"
 
 networks:
+  core_cloudflared:
+    external: true
+
   forgejo:
     internal: true
 

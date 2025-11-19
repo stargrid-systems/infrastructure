@@ -59,7 +59,7 @@ services:
     cap_drop:
     - "NET_RAW"
     networks:
-    - "cloudflared"
+    - "core_cloudflared"
     - "nextcloud"
 
   nextcloud-database:
@@ -318,7 +318,7 @@ services:
     cap_drop:
     - "NET_RAW"
     networks:
-    - "cloudflared"
+    - "core_cloudflared"
     - "nextcloud"
 
   nextcloud-talk-recording:
@@ -511,5 +511,8 @@ volumes:
 
 
 networks:
+  core_cloudflared:
+    external: true
+
   nextcloud:
     internal: true
