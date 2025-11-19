@@ -1,22 +1,22 @@
 services:
-  nextcloud-apache:
+  apache:
     depends_on:
-      # nextcloud-onlyoffice:
+      # onlyoffice:
       #   condition: "service_started"
       #   required: false
-      nextcloud-collabora:
+      collabora:
         condition: "service_started"
         required: false
-      nextcloud-talk:
+      talk:
         condition: "service_started"
         required: false
-      nextcloud-notify-push:
+      notify-push:
         condition: "service_started"
         required: false
-      nextcloud-whiteboard:
+      whiteboard:
         condition: "service_started"
         required: false
-      nextcloud-nextcloud:
+      nextcloud:
         condition: "service_started"
         required: false
     image: "ghcr.io/nextcloud-releases/aio-apache:20251031_122139"
@@ -34,20 +34,20 @@ services:
     - "${NC_APACHE_PORT}/udp"
     environment:
     - "NC_DOMAIN=${NC_DOMAIN}"
-    - "NEXTCLOUD_HOST=nextcloud-nextcloud"
-    - "APACHE_HOST=nextcloud-apache"
-    - "COLLABORA_HOST=nextcloud-collabora"
-    - "TALK_HOST=nextcloud-talk"
+    - "NEXTCLOUD_HOST=nextcloud"
+    - "APACHE_HOST=apache"
+    - "COLLABORA_HOST=collabora"
+    - "TALK_HOST=talk"
     - "APACHE_PORT=${NC_APACHE_PORT}"
-    - "ONLYOFFICE_HOST=nextcloud-onlyoffice"
+    - "ONLYOFFICE_HOST=onlyoffice"
     - "TZ=${NC_TIMEZONE}"
     - "APACHE_MAX_SIZE=${NC_APACHE_MAX_SIZE}"
     - "APACHE_MAX_TIME=${NC_NEXTCLOUD_MAX_TIME}"
-    - "NOTIFY_PUSH_HOST=nextcloud-notify-push"
-    - "WHITEBOARD_HOST=nextcloud-whiteboard"
+    - "NOTIFY_PUSH_HOST=notify-push"
+    - "WHITEBOARD_HOST=whiteboard"
     volumes:
-    - "nextcloud-nextcloud:/var/www/html:ro"
-    - "nextcloud-apache:/mnt/data:rw"
+    - "nextcloud:/var/www/html:ro"
+    - "apache:/mnt/data:rw"
     restart: "unless-stopped"
     read_only: true
     tmpfs:
@@ -62,7 +62,7 @@ services:
     - "core_cloudflared"
     - "nextcloud"
 
-  nextcloud-database:
+  database:
     image: "ghcr.io/nextcloud-releases/aio-postgresql:20251031_122139"
     user: "999"
     init: true
@@ -76,8 +76,8 @@ services:
     expose:
     - "5432"
     volumes:
-    - "nextcloud-database:/var/lib/postgresql/data:rw"
-    - "nextcloud-database-dump:/mnt/data:rw"
+    - "database:/var/lib/postgresql/data:rw"
+    - "database-dump:/mnt/data:rw"
     environment:
     - "POSTGRES_PASSWORD=${NC_DATABASE_PASSWORD}"
     - "POSTGRES_DB=nextcloud_database"
@@ -95,24 +95,24 @@ services:
     networks:
     - "nextcloud"
 
-  nextcloud-nextcloud:
+  nextcloud:
     depends_on:
-      nextcloud-database:
+      database:
         condition: "service_started"
         required: false
-      nextcloud-redis:
+      redis:
         condition: "service_started"
         required: false
-      nextcloud-clamav:
+      clamav:
         condition: "service_started"
         required: false
-      nextcloud-fulltextsearch:
+      fulltextsearch:
         condition: "service_started"
         required: false
-      nextcloud-talk-recording:
+      talk-recording:
         condition: "service_started"
         required: false
-      nextcloud-imaginary:
+      imaginary:
         condition: "service_started"
         required: false
     image: "ghcr.io/nextcloud-releases/aio-nextcloud:20251031_122139"
@@ -128,19 +128,19 @@ services:
     - "9000"
     - "9001"
     volumes:
-    - "nextcloud-nextcloud:/var/www/html:rw"
-    - "nextcloud-nextcloud-data:/mnt/ncdata:rw"
+    - "nextcloud:/var/www/html:rw"
+    - "nextcloud-data:/mnt/ncdata:rw"
     # - "${NC_NEXTCLOUD_TRUSTED_CACERTS_DIR}:/usr/local/share/ca-certificates:ro"
     environment:
-    - "NEXTCLOUD_HOST=nextcloud-nextcloud"
-    - "POSTGRES_HOST=nextcloud-database"
+    - "NEXTCLOUD_HOST=nextcloud"
+    - "POSTGRES_HOST=database"
     - "POSTGRES_PORT=5432"
     - "POSTGRES_PASSWORD=${NC_DATABASE_PASSWORD}"
     - "POSTGRES_DB=nextcloud_database"
     - "POSTGRES_USER=nextcloud"
-    - "REDIS_HOST=nextcloud-redis"
+    - "REDIS_HOST=redis"
     - "REDIS_HOST_PASSWORD=${NC_REDIS_PASSWORD}"
-    - "APACHE_HOST=nextcloud-apache"
+    - "APACHE_HOST=apache"
     - "APACHE_PORT=${NC_APACHE_PORT}"
     - "NC_DOMAIN=${NC_DOMAIN}"
     - "ADMIN_USER=admin"
@@ -152,22 +152,22 @@ services:
     - "SIGNALING_SECRET=${NC_SIGNALING_SECRET}"
     - "ONLYOFFICE_SECRET=${NC_ONLYOFFICE_SECRET}"
     - "CLAMAV_ENABLED=${NC_CLAMAV_ENABLED}"
-    - "CLAMAV_HOST=nextcloud-clamav"
+    - "CLAMAV_HOST=clamav"
     - "ONLYOFFICE_ENABLED=${NC_ONLYOFFICE_ENABLED}"
     - "COLLABORA_ENABLED=${NC_COLLABORA_ENABLED}"
-    - "COLLABORA_HOST=nextcloud-collabora"
+    - "COLLABORA_HOST=collabora"
     - "TALK_ENABLED=${NC_TALK_ENABLED}"
-    - "ONLYOFFICE_HOST=nextcloud-onlyoffice"
+    - "ONLYOFFICE_HOST=onlyoffice"
     - "UPDATE_NEXTCLOUD_APPS=${NC_UPDATE_NEXTCLOUD_APPS}"
     - "TZ=${NC_TIMEZONE}"
     - "TALK_PORT=${NC_TALK_PORT}"
     - "IMAGINARY_ENABLED=${NC_IMAGINARY_ENABLED}"
-    - "IMAGINARY_HOST=nextcloud-imaginary"
+    - "IMAGINARY_HOST=imaginary"
     - "CLAMAV_MAX_SIZE=${NC_APACHE_MAX_SIZE}"
     - "PHP_UPLOAD_LIMIT=${NC_NEXTCLOUD_UPLOAD_LIMIT}"
     - "PHP_MEMORY_LIMIT=${NC_NEXTCLOUD_MEMORY_LIMIT}"
     - "FULLTEXTSEARCH_ENABLED=${NC_FULLTEXTSEARCH_ENABLED}"
-    - "FULLTEXTSEARCH_HOST=nextcloud-fulltextsearch"
+    - "FULLTEXTSEARCH_HOST=fulltextsearch"
     - "FULLTEXTSEARCH_PORT=9200"
     - "FULLTEXTSEARCH_USER=elastic"
     - "FULLTEXTSEARCH_INDEX=nextcloud"
@@ -179,7 +179,7 @@ services:
     - "INSTALL_LATEST_MAJOR=${NC_INSTALL_LATEST_MAJOR}"
     - "TALK_RECORDING_ENABLED=${NC_TALK_RECORDING_ENABLED}"
     - "RECORDING_SECRET=${NC_RECORDING_SECRET}"
-    - "TALK_RECORDING_HOST=nextcloud-talk-recording"
+    - "TALK_RECORDING_HOST=talk-recording"
     - "FULLTEXTSEARCH_PASSWORD=${NC_FULLTEXTSEARCH_PASSWORD}"
     - "REMOVE_DISABLED_APPS=${NC_REMOVE_DISABLED_APPS}"
     - "IMAGINARY_SECRET=${NC_IMAGINARY_SECRET}"
@@ -193,7 +193,7 @@ services:
     - "internet"
     - "nextcloud"
 
-  nextcloud-notify-push:
+  notify-push:
     image: "ghcr.io/nextcloud-releases/aio-notify-push:20251031_122139"
     user: "33"
     init: true
@@ -207,14 +207,14 @@ services:
     expose:
     - "7867"
     volumes:
-    - "nextcloud-nextcloud:/nextcloud:ro"
+    - "nextcloud:/nextcloud:ro"
     environment:
     - "NC_DOMAIN=${NC_DOMAIN}"
-    - "NEXTCLOUD_HOST=nextcloud-nextcloud"
+    - "NEXTCLOUD_HOST=nextcloud"
     - "TZ=${NC_TIMEZONE}"
-    - "REDIS_HOST=nextcloud-redis"
+    - "REDIS_HOST=redis"
     - "REDIS_HOST_PASSWORD=${NC_REDIS_PASSWORD}"
-    - "POSTGRES_HOST=nextcloud-database"
+    - "POSTGRES_HOST=database"
     - "POSTGRES_PORT=5432"
     - "POSTGRES_PASSWORD=${NC_DATABASE_PASSWORD}"
     - "POSTGRES_DB=nextcloud_database"
@@ -226,7 +226,7 @@ services:
     networks:
     - "nextcloud"
 
-  nextcloud-redis:
+  redis:
     image: "ghcr.io/nextcloud-releases/aio-redis:20251031_122139"
     user: "999"
     init: true
@@ -243,7 +243,7 @@ services:
     - "REDIS_HOST_PASSWORD=${NC_REDIS_PASSWORD}"
     - "TZ=${NC_TIMEZONE}"
     volumes:
-    - "nextcloud-redis:/data:rw"
+    - "redis:/data:rw"
     restart: "unless-stopped"
     read_only: true
     cap_drop:
@@ -251,7 +251,7 @@ services:
     networks:
     - "nextcloud"
 
-  nextcloud-collabora:
+  collabora:
     command: "${NC_ADDITIONAL_COLLABORA_OPTIONS}"
     image: "ghcr.io/nextcloud-releases/aio-collabora:20251031_122139"
     init: true
@@ -265,7 +265,7 @@ services:
     expose:
     - "9980"
     environment:
-    - "aliasgroup1=https://${NC_DOMAIN}:443,http://nextcloud-apache:23973"
+    - "aliasgroup1=https://${NC_DOMAIN}:443,http://apache:23973"
     - "extra_params=--o:ssl.enable=false --o:ssl.termination=true --o:mount_jail_tree=false --o:logging.level=warning --o:logging.level_startup=warning --o:home_mode.enable=true --o:remote_font_config.url=https://${NC_DOMAIN}/apps/richdocuments/settings/fonts.json --o:net.post_allow.host[0]=.+"
     - "dictionaries=${NC_COLLABORA_DICTIONARIES}"
     - "TZ=${NC_TIMEZONE}"
@@ -284,7 +284,7 @@ services:
     - "internet"
     - "nextcloud"
 
-  nextcloud-talk:
+  talk:
     image: "ghcr.io/nextcloud-releases/aio-talk:20251031_122139"
     user: "1000"
     init: true
@@ -301,7 +301,7 @@ services:
     - "8081"
     environment:
     - "NC_DOMAIN=${NC_DOMAIN}"
-    - "TALK_HOST=nextcloud-talk"
+    - "TALK_HOST=talk"
     - "TURN_SECRET=${NC_TURN_SECRET}"
     - "SIGNALING_SECRET=${NC_SIGNALING_SECRET}"
     - "TZ=${NC_TIMEZONE}"
@@ -321,7 +321,7 @@ services:
     - "core_cloudflared"
     - "nextcloud"
 
-  nextcloud-talk-recording:
+  talk-recording:
     image: "ghcr.io/nextcloud-releases/aio-talk-recording:20251031_122139"
     user: "122"
     init: true
@@ -340,7 +340,7 @@ services:
     - "RECORDING_SECRET=${NC_RECORDING_SECRET}"
     - "INTERNAL_SECRET=${NC_TALK_INTERNAL_SECRET}"
     volumes:
-    - "nextcloud-talk-recording:/tmp:rw"
+    - "talk-recording:/tmp:rw"
     shm_size: 2147483648
     restart: "unless-stopped"
     read_only: true
@@ -351,7 +351,7 @@ services:
     networks:
     - "nextcloud"
 
-  nextcloud-clamav:
+  clamav:
     image: "ghcr.io/nextcloud-releases/aio-clamav:20251031_122139"
     user: "100"
     init: false
@@ -368,7 +368,7 @@ services:
     - "TZ=${NC_TIMEZONE}"
     - "MAX_SIZE=${NC_NEXTCLOUD_UPLOAD_LIMIT}"
     volumes:
-    - "nextcloud-clamav:/var/lib/clamav:rw"
+    - "clamav:/var/lib/clamav:rw"
     restart: "unless-stopped"
     read_only: true
     tmpfs:
@@ -383,7 +383,7 @@ services:
     - "internet"
     - "nextcloud"
 
-  # nextcloud-onlyoffice:
+  # onlyoffice:
   #   image: "ghcr.io/nextcloud-releases/aio-onlyoffice:20251031_122139"
   #   init: true
   #   healthcheck:
@@ -401,7 +401,7 @@ services:
   #   - "JWT_HEADER=AuthorizationJwt"
   #   - "JWT_SECRET=${NC_ONLYOFFICE_SECRET}"
   #   volumes:
-  #   - "nextcloud-onlyoffice:/var/lib/onlyoffice:rw"
+  #   - "onlyoffice:/var/lib/onlyoffice:rw"
   #   restart: "unless-stopped"
   #   cap_drop:
   #   - "NET_RAW"
@@ -409,7 +409,7 @@ services:
   #   - "internet"
   #   - "nextcloud"
 
-  nextcloud-imaginary:
+  imaginary:
     image: "ghcr.io/nextcloud-releases/aio-imaginary:20251031_122139"
     user: "65534"
     init: true
@@ -436,7 +436,7 @@ services:
     tmpfs:
     - "/tmp"
 
-  nextcloud-fulltextsearch:
+  fulltextsearch:
     image: "ghcr.io/nextcloud-releases/aio-fulltextsearch:20251031_122139"
     init: false
     healthcheck:
@@ -460,14 +460,14 @@ services:
     - "xpack.security.enabled=false"
     - "FULLTEXTSEARCH_PASSWORD=${NC_FULLTEXTSEARCH_PASSWORD}"
     volumes:
-    - "nextcloud-elasticsearch:/usr/share/elasticsearch/data:rw"
+    - "elasticsearch:/usr/share/elasticsearch/data:rw"
     restart: "unless-stopped"
     cap_drop:
     - "NET_RAW"
     networks:
     - "nextcloud"
 
-  nextcloud-whiteboard:
+  whiteboard:
     image: "ghcr.io/nextcloud-releases/aio-whiteboard:20251031_122139"
     user: "65534"
     init: true
@@ -487,7 +487,7 @@ services:
     - "NEXTCLOUD_URL=https://${NC_DOMAIN}"
     - "JWT_SECRET_KEY=${NC_WHITEBOARD_SECRET}"
     - "STORAGE_STRATEGY=redis"
-    - "REDIS_HOST=nextcloud-redis"
+    - "REDIS_HOST=redis"
     - "REDIS_HOST_PASSWORD=${NC_REDIS_PASSWORD}"
     - "BACKUP_DIR=/tmp"
     restart: "unless-stopped"
@@ -498,16 +498,16 @@ services:
     - "nextcloud"
 
 volumes:
-  nextcloud-apache:
-  nextcloud-clamav:
-  nextcloud-database:
-  nextcloud-database-dump:
-  nextcloud-elasticsearch:
-  nextcloud-nextcloud:
-  nextcloud-onlyoffice:
-  nextcloud-redis:
-  nextcloud-talk-recording:
-  nextcloud-nextcloud-data:
+  apache:
+  clamav:
+  database:
+  database-dump:
+  elasticsearch:
+  nextcloud:
+  onlyoffice:
+  redis:
+  talk-recording:
+  nextcloud-data:
 
 
 networks:
