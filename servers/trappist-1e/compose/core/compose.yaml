@@ -1,7 +1,3 @@
-include:
-- "compose/forgejo.yaml"
-- "compose/nextcloud.yaml"
-
 services:
   cloudflared:
     image: "cloudflare/cloudflared:2025.11.1"
