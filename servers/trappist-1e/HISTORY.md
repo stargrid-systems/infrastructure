@@ -1,5 +1,13 @@
 # History
 
+## 2025-11-18
+
+```bash
+sudo apt install docker-cli
+```
+
+Deployed `compose/core`.
+
 ## 2025-11-17
 
 Add `simon` to `sudo` and `docker` groups.
