@@ -1,5 +1,17 @@
 # History
 
+## 2025-11-20
+
+Reset incus to factory:
+
+```bash
+incus delete muhavura --force
+sudo rm /etc/sysctl.d/90-ipv6-enp9s0-proxy.conf
+sudo sysctl --system
+# Paste config/incus.yaml
+incus admin init --preseed
+```
+
 ## 2025-11-19
 
 Login as `root`.
