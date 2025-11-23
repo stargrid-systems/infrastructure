@@ -14,7 +14,7 @@ spec:
     helm:
       releaseName: external-dns
   destination:
-    namespace: argocd
+    namespace: external-dns
     server: "{{ .Values.spec.destination.server }}"
   syncPolicy:
     automated:
