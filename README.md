@@ -7,7 +7,7 @@
 Registered and managed via [Cloudflare](https://cloudflare.com).
 
 Email server is [Purelymail](https://purelymail.com).
-It's very cheap and we only really need it for sending emails from various services.
+It's cheap and we only really need it for sending emails from various services.
 
 ## Servers
 

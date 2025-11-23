@@ -7,6 +7,13 @@ source .env.k3s || exit 1
 hetzner-k3s create --config cluster_config.yaml | tee out/create.log
 ```
 
+Add ArgoCD:
+
+```bash
+kubectl create namespace argocd
+kubectl apply -n argocd -f https://raw.githubusercontent.com/argoproj/argo-cd/stable/manifests/install.yaml
+```
+
 ## Failed attempt using CAPH
 
 ```bash
