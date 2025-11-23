@@ -20,6 +20,8 @@ spec:
   syncPolicy:
     syncOptions:
     - CreateNamespace=true
+    # Due to size of CRD
+    - ServerSideApply=true
     automated:
       selfHeal: true
       prune: true
