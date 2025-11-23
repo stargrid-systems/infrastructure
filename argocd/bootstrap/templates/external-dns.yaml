@@ -6,9 +6,6 @@ metadata:
   finalizers:
   - resources-finalizer.argocd.argoproj.io
 spec:
-  destination:
-    namespace: argocd
-    server: {{ .Values.spec.destination.server }}
   project: default
   source:
     chart: external-dns
@@ -16,3 +13,6 @@ spec:
     targetRevision: 0.19.0
     helm:
       releaseName: external-dns
+  destination:
+    namespace: argocd
+    server: {{ .Values.spec.destination.server }}

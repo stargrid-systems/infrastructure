@@ -14,7 +14,18 @@ kubectl create namespace argocd
 kubectl apply -n argocd -f https://raw.githubusercontent.com/argoproj/argo-cd/stable/manifests/install.yaml
 ```
 
-Manually set up authentication template.
+Manually set up authentication template!
+
+Apply bootstrap app:
+
+```bash
+argocd app create bootstrap \
+    --dest-namespace argocd \
+    --dest-server https://kubernetes.default.svc \
+    --repo https://github.com/stargrid-systems/infrastructure \
+    --path argocd/bootstrap
+argocd app sync bootstrap
+```
 
 ## Failed attempt using CAPH
 
