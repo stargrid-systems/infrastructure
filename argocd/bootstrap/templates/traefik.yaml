@@ -1,0 +1,23 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: traefik
+  namespace: argocd
+  finalizers:
+  - resources-finalizer.argocd.argoproj.io
+spec:
+  project: default
+  source:
+    chart: traefik
+    repoURL: https://traefik.github.io/charts
+    targetRevision: 37.4.0
+    helm:
+      releaseName: traefik
+      valuesObject: {}
+  destination:
+    namespace: argocd
+    server: "{{ .Values.spec.destination.server }}"
+  syncPolicy:
+    automated:
+      selfHeal: true
+      prune: true
