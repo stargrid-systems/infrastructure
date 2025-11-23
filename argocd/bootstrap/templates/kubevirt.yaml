@@ -1,20 +1,18 @@
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
-  name: external-dns
+  name: kubevirt
   namespace: argocd
   finalizers:
   - resources-finalizer.argocd.argoproj.io
 spec:
   project: default
   source:
-    chart: external-dns
-    repoURL: https://kubernetes-sigs.github.io/external-dns
-    targetRevision: 1.19.0
-    helm:
-      releaseName: external-dns
+    repoURL: https://github.com/stargrid-systems/infrastructure
+    targetRevision: HEAD
+    path: argocd/kubevirt
   destination:
-    namespace: argocd
+    namespace: kubevirt
     server: "{{ .Values.spec.destination.server }}"
   syncPolicy:
     automated:
