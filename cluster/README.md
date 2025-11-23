@@ -1,5 +1,11 @@
 # Cluster
 
+## Bootstrapping
+
+```bash
+source .env.k3s || exit 1
+hetzner-k3s create --config cluster_config.yaml | tee out/create.log
+```
 
 ## Failed attempt using CAPH
 
