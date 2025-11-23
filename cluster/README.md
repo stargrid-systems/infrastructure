@@ -14,6 +14,8 @@ kubectl create namespace argocd
 kubectl apply -n argocd -f https://raw.githubusercontent.com/argoproj/argo-cd/stable/manifests/install.yaml
 ```
 
+Manually set up authentication template.
+
 ## Failed attempt using CAPH
 
 ```bash
