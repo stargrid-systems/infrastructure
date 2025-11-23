@@ -13,9 +13,12 @@ spec:
     targetRevision: 37.4.0
     helm:
       releaseName: traefik
-      valuesObject: {}
+      valuesObject:
+        service:
+          annotations:
+            load-balancer.hetzner.cloud/network-zone: eu-central
   destination:
-    namespace: argocd
+    namespace: traefik
     server: "{{ .Values.spec.destination.server }}"
   syncPolicy:
     automated:
