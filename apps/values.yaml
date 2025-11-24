@@ -1,4 +1,15 @@
+domain: "stargrid.systems"
+
 spec:
   project: apps
   destination:
+    namespace: apps
     server: https://kubernetes.default.svc
+
+  syncPolicy:
+    syncOptions:
+    - CreateNamespace=true
+    automated:
+      enabled: true
+      selfHeal: true
+      prune: true
