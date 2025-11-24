@@ -20,8 +20,8 @@ spec:
             external-dns.alpha.kubernetes.io/hostname: {{ printf "cloud.%s" .Values.domain | quote }}
         nextcloud:
           host: {{ printf "cloud.%s" .Values.domain | quote }}
-          existingSecret:
-            enabled: true
+          # existingSecret:
+          #   enabled: true
         redis:
           enabled: true
           auth:
