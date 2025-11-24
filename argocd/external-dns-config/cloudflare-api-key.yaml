@@ -1,0 +1,13 @@
+---
+apiVersion: bitnami.com/v1alpha1
+kind: SealedSecret
+metadata:
+  name: cloudflare-api-key
+  namespace: argocd
+spec:
+  encryptedData:
+    apiKey: AgBLZBESNxuMo/2Fso+dMvVdu9FaZD3bJ0CU87WGtPBA5ZIbghc5Y95Hu3GRu3YZ9GlttYThFiUvRXfG5oYnUpAM1L2nFMRUiO3/+Z2EwiPNMxJoNbDTxn4x1FgwTHSTa9+wHB1k6dm0GWBptNlpEeASAzBR/V2En6sxY3d5UKOfHp0N9C/EyaeIPR/C26h3Xr7kS5cWz6bF/2//SDHa3EFIcRcHfteh5NNRDSKmvCvbyk/dohhZm70COtCdNCw7WY4bm4ciZVcHC/moEGf6AsiWJgywLFAWcWXFlHJnia687Qm3za1IYeJm1A7D+hGGc7tJ/+pAKY4oAJtwZQVx0U96aBUcSp1B3zjg4Ni09bAYAlGJqT9Vpay1FjRehfpsoaASPpirSFT5fi67/LpPTuVLZ3cQjT0MMQxmiWzAmFaYtyOyN46Br5wtOsk8ck0aS7iu1rtSnYRQNuOY74jzo+anBl64bIZdp2Qx2EbT2YasUL1GyF4qPGMWg2FLkz1ng7FYWtrCYL1boI4qOeW+8TJT6hlN8twaztQGCRV0DT6S/WwSKTk+Jgtpnm4yo4lHSeCYGQ6Pf5ZrAupWn9Gf5xU0DU3JQozWcJMigpbw3DMoqgdKstpSn3Wqb5zVOjZ9FgG0uaNXFPVFcjLSjcJQ9Qm9eToAi3ob6wMvJgia+XijBY8xngrlwh14mu4PHZf3Kv/wsSwsRzzvvXtIO9IvEEJEn2jLd+lebUVkk7r4b3g0I30d+fttMfnt
+  template:
+    metadata:
+      name: cloudflare-api-key
+      namespace: argocd
