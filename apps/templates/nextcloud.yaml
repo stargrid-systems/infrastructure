@@ -18,17 +18,17 @@ spec:
           enabled: true
           annotations:
             external-dns.alpha.kubernetes.io/hostname: {{ printf "cloud.%s" .Values.domain | quote }}
-      nextcloud:
-        host: {{ printf "cloud.%s" .Values.domain | quote }}
-        existingSecret:
+        nextcloud:
+          host: {{ printf "cloud.%s" .Values.domain | quote }}
+          existingSecret:
+            enabled: true
+        redis:
           enabled: true
-      redis:
-        enabled: true
-        auth:
-          enabled: false
-      service:
-        annotations:
-          traefik.ingress.kubernetes.io/service.sticky.cookie: "true"
+          auth:
+            enabled: false
+        service:
+          annotations:
+            traefik.ingress.kubernetes.io/service.sticky.cookie: "true"
 
   destination: {{ .Values.spec.destination | toYaml | nindent 4 }}
   syncPolicy: {{ .Values.spec.syncPolicy | toYaml | nindent 4 }}
