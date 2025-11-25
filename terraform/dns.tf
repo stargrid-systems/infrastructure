@@ -1,3 +1,12 @@
+# TODO: not sure if this works?
+# resource "cloudflare_registrar_domain" "stargrid_systems" {
+#   account_id  = var.cloudflare_account_id
+#   domain_name = var.domain
+#   auto_renew  = true
+#   locked      = true
+#   privacy     = true
+# }
+
 resource "cloudflare_zone" "stargrid_systems" {
   account = {
     id = var.cloudflare_account_id
@@ -5,6 +14,15 @@ resource "cloudflare_zone" "stargrid_systems" {
   name = var.domain
   type = "full"
 }
+
+# TODO: re-enable once it stops being pending
+# resource "cloudflare_zone_dnssec" "stargrid_systems" {
+#   zone_id = cloudflare_zone.stargrid_systems.id
+#   dnssec_multi_signer = false
+#   dnssec_presigned = true
+#   dnssec_use_nsec3 = false
+#   status = "active"
+# }
 
 # GitHub domain validation
 
