@@ -9,5 +9,10 @@ terraform {
       source  = "cloudflare/cloudflare"
       version = "~> 5.13"
     }
+
+    ct = {
+      source  = "poseidon/ct"
+      version = "~> 0.14"
+    }
   }
 }

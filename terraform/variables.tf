@@ -14,3 +14,15 @@ variable "domain" {
   type        = string
   default     = "stargrid.systems"
 }
+
+variable "hcloud_token" {
+  description = "Hetzner Cloud API token"
+  type        = string
+  sensitive   = true
+}
+
+variable "default_location" {
+  description = "Default Hetzner Cloud location"
+  type        = string
+  default     = "nbg1"
+}
