@@ -1,5 +1,17 @@
 variant: flatcar
-version: 1.0.0
+version: 1.1.0
+
+storage:
+  files:
+  - path: /etc/flatcar/update.conf
+    overwrite: true
+    mode: 420
+    contents:
+      inline: |
+        GROUP=stable
+        REBOOT_STRATEGY=reboot
+        LOCKSMITHD_REBOOT_WINDOW_START="Thu 04:00"
+        LOCKSMITHD_REBOOT_WINDOW_LENGTH=1h
 
 systemd:
   units:

@@ -42,16 +42,6 @@ resource "hcloud_firewall" "trappist1e" {
   }
 }
 
-# Nextcloud bucket
-
-resource "random_uuid" "nextcloud_bucket_id" {}
-
-resource "minio_s3_bucket" "nextcloud" {
-  bucket         = random_uuid.nextcloud_bucket_id.result
-  acl            = "private"
-  object_locking = false
-}
-
 # This snapshot is created from this repository.
 # See: <flatcar-image/README.md> for more information.
 data "hcloud_image" "flatcar" {
@@ -60,14 +50,30 @@ data "hcloud_image" "flatcar" {
 }
 
 data "ct_config" "trappist1e" {
-  content      = file("trappist-1e/ignition.yaml")
+  content      = file("trappist-1e/base.yaml")
   strict       = true
   pretty_print = false
+
+  snippets = [
+    templatefile("trappist-1e/ephemeral1-filesystem.yaml.tftpl", {
+      volume_linux_device = hcloud_volume.trappist1e.linux_device,
+    }),
+    file("trappist-1e/docker-mount.yaml"),
+  ]
 }
 
 resource "hcloud_ssh_key" "trappist1e" {
   name       = "trappist-1e"
   public_key = file("trappist-1e/trappist-1e.pub")
+}
+
+# Nextcloud data volume
+resource "hcloud_volume" "trappist1e" {
+  name = "trappist-1e"
+  size = 128
+  # We can't attach the volume directly to avoid a cylce.
+  location = var.default_location
+  format   = "ext4"
 }
 
 # Server
@@ -82,6 +88,14 @@ resource "hcloud_server" "trappist1e" {
   firewall_ids             = [hcloud_firewall.trappist1e.id]
   shutdown_before_deletion = true
 }
+
+# Attach the volume
+resource "hcloud_volume_attachment" "trappist1e" {
+  server_id = hcloud_server.trappist1e.id
+  volume_id = hcloud_volume.trappist1e.id
+  automount = false
+}
+
 
 # RDNS and DNS records
 
