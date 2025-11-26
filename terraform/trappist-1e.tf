@@ -14,9 +14,9 @@ resource "hcloud_firewall" "trappist1e" {
   }
 
   dynamic "rule" {
-    for_each = toset([80, 443, 8080, 8443])
+    for_each = toset([80, 8443])
     content {
-      description = "Allow Nextcloud HTTP/HTTPS"
+      description = "Allow Nextcloud AIO"
       direction   = "in"
       protocol    = "tcp"
       port        = rule.value
@@ -30,7 +30,21 @@ resource "hcloud_firewall" "trappist1e" {
   dynamic "rule" {
     for_each = toset(["tcp", "udp"])
     content {
-      description = "Allow Nextcloud Talk TCP/UDP"
+      description = "Allow Nextcloud"
+      direction   = "in"
+      protocol    = rule.value
+      port        = 443
+      source_ips = [
+        "0.0.0.0/0",
+        "::/0"
+      ]
+    }
+  }
+
+  dynamic "rule" {
+    for_each = toset(["tcp", "udp"])
+    content {
+      description = "Allow Nextcloud Talk Turnserver"
       direction   = "in"
       protocol    = rule.value
       port        = 3478
