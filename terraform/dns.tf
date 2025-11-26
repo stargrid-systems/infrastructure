@@ -15,13 +15,13 @@ resource "cloudflare_zone" "stargrid_systems" {
   type = "full"
 }
 
-# TODO: re-enable once it stops being pending
+# TODO: Also doesn't work. Possibly because it's registered with Cloudflare?
 # resource "cloudflare_zone_dnssec" "stargrid_systems" {
-#   zone_id = cloudflare_zone.stargrid_systems.id
+#   zone_id             = cloudflare_zone.stargrid_systems.id
 #   dnssec_multi_signer = false
-#   dnssec_presigned = true
-#   dnssec_use_nsec3 = false
-#   status = "active"
+#   dnssec_presigned    = true
+#   dnssec_use_nsec3    = false
+#   status              = "active"
 # }
 
 # GitHub domain validation
