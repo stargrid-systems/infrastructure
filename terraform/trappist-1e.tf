@@ -1,21 +1,3 @@
-# This snapshot is created from this repository.
-# See: <flatcar-image/README.md> for more information.
-data "hcloud_image" "flatcar" {
-  with_selector = "os=flatcar"
-  most_recent   = true
-}
-
-data "ct_config" "trappist1e" {
-  content      = file("trappist-1e/ignition.yaml")
-  strict       = true
-  pretty_print = false
-}
-
-resource "hcloud_ssh_key" "trappist1e" {
-  name       = "trappist-1e"
-  public_key = file("trappist-1e/trappist-1e.pub")
-}
-
 # Firewall
 
 resource "hcloud_firewall" "trappist1e" {
@@ -35,9 +17,9 @@ resource "hcloud_firewall" "trappist1e" {
     for_each = toset([80, 443, 8080, 8443])
     content {
       description = "Allow Nextcloud HTTP/HTTPS"
-      direction = "in"
-      protocol  = "tcp"
-      port      = rule.value
+      direction   = "in"
+      protocol    = "tcp"
+      port        = rule.value
       source_ips = [
         "0.0.0.0/0",
         "::/0"
@@ -60,6 +42,36 @@ resource "hcloud_firewall" "trappist1e" {
   }
 }
 
+# Nextcloud bucket
+
+resource "random_uuid" "nextcloud_bucket_id" {}
+
+resource "minio_s3_bucket" "nextcloud" {
+  bucket         = random_uuid.nextcloud_bucket_id.result
+  acl            = "private"
+  object_locking = false
+}
+
+# This snapshot is created from this repository.
+# See: <flatcar-image/README.md> for more information.
+data "hcloud_image" "flatcar" {
+  with_selector = "os=flatcar"
+  most_recent   = true
+}
+
+data "ct_config" "trappist1e" {
+  content      = file("trappist-1e/ignition.yaml")
+  strict       = true
+  pretty_print = false
+}
+
+resource "hcloud_ssh_key" "trappist1e" {
+  name       = "trappist-1e"
+  public_key = file("trappist-1e/trappist-1e.pub")
+}
+
+# Server
+
 resource "hcloud_server" "trappist1e" {
   name                     = "trappist-1e"
   server_type              = "cx33"
@@ -70,6 +82,8 @@ resource "hcloud_server" "trappist1e" {
   firewall_ids             = [hcloud_firewall.trappist1e.id]
   shutdown_before_deletion = true
 }
+
+# RDNS and DNS records
 
 resource "cloudflare_dns_record" "trappist1e_ipv4" {
   zone_id = cloudflare_zone.stargrid_systems.id
