@@ -16,6 +16,50 @@ resource "hcloud_ssh_key" "trappist1e" {
   public_key = file("trappist-1e/trappist-1e.pub")
 }
 
+# Firewall
+
+resource "hcloud_firewall" "trappist1e" {
+  name = "trappist-1e"
+
+  rule {
+    description = "Allow ICMP"
+    direction   = "in"
+    protocol    = "icmp"
+    source_ips = [
+      "0.0.0.0/0",
+      "::/0"
+    ]
+  }
+
+  dynamic "rule" {
+    for_each = toset([80, 443, 8080, 8443])
+    content {
+      description = "Allow Nextcloud HTTP/HTTPS"
+      direction = "in"
+      protocol  = "tcp"
+      port      = rule.value
+      source_ips = [
+        "0.0.0.0/0",
+        "::/0"
+      ]
+    }
+  }
+
+  dynamic "rule" {
+    for_each = toset(["tcp", "udp"])
+    content {
+      description = "Allow Nextcloud Talk TCP/UDP"
+      direction   = "in"
+      protocol    = rule.value
+      port        = 3478
+      source_ips = [
+        "0.0.0.0/0",
+        "::/0"
+      ]
+    }
+  }
+}
+
 resource "hcloud_server" "trappist1e" {
   name                     = "trappist-1e"
   server_type              = "cx33"
@@ -23,6 +67,7 @@ resource "hcloud_server" "trappist1e" {
   location                 = var.default_location
   user_data                = data.ct_config.trappist1e.rendered
   ssh_keys                 = [hcloud_ssh_key.trappist1e.id]
+  firewall_ids             = [hcloud_firewall.trappist1e.id]
   shutdown_before_deletion = true
 }
 
@@ -56,7 +101,7 @@ resource "hcloud_rdns" "trappist1e_ipv6" {
 }
 
 # Nextcloud DNS record
-resource "cloudflare_dns_record" "trappist1e_nextcloud" {
+resource "cloudflare_dns_record" "nextcloud_cname" {
   zone_id = cloudflare_zone.stargrid_systems.id
   name    = "nextcloud"
   content = cloudflare_dns_record.trappist1e_ipv4.name
