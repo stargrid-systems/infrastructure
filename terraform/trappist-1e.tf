@@ -81,13 +81,25 @@ resource "hcloud_ssh_key" "trappist1e" {
   public_key = file("trappist-1e/trappist-1e.pub")
 }
 
-# Nextcloud data volume
+# Docker data volume
 resource "hcloud_volume" "trappist1e" {
   name = "trappist-1e"
   size = 128
-  # We can't attach the volume directly to avoid a cylce.
+  # We can't attach the volume directly to avoid a cycle.
   location = var.default_location
   format   = "ext4"
+}
+
+# Nextcloud S3 volume. Requires manual integration. See README.
+
+resource "random_id" "nextcloud_bucket_id" {
+  byte_length = 6
+}
+
+resource "minio_s3_bucket" "nextcloud" {
+  bucket         = random_id.nextcloud_bucket_id.hex
+  acl            = "private"
+  object_locking = false
 }
 
 # Server
