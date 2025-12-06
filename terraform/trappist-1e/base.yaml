@@ -13,6 +13,25 @@ storage:
         LOCKSMITHD_REBOOT_WINDOW_START="Thu 04:00"
         LOCKSMITHD_REBOOT_WINDOW_LENGTH=1h
 
+  - path: /etc/docker/daemon.json
+    contents:
+      inline: |
+        {
+          "default-network-opts": {
+            "bridge": {
+              "com.docker.network.enable_ipv6": "true"
+            }
+          }
+        }
+
+  # As per: <https://github.com/quic-go/quic-go/wiki/UDP-Buffer-Sizes>
+  - path: /etc/sysctl.d/quic-udp-increase.conf
+    mode: 420
+    contents:
+      inline: |
+        net.core.rmem_max=7500000
+        net.core.wmem_max=7500000
+
 systemd:
   units:
   - name: nextcloud-aio.service
