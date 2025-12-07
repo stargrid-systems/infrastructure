@@ -1,0 +1,64 @@
+variant: flatcar
+version: 1.1.0
+
+storage:
+  files:
+  - path: /etc/flatcar/update.conf
+    overwrite: true
+    mode: 420
+    contents:
+      inline: |
+        GROUP=stable
+        REBOOT_STRATEGY=reboot
+        LOCKSMITHD_REBOOT_WINDOW_START="Thu 04:00"
+        LOCKSMITHD_REBOOT_WINDOW_LENGTH=1h
+
+  - path: /etc/docker/daemon.json
+    contents:
+      inline: |
+        {
+          "default-network-opts": {
+            "bridge": {
+              "com.docker.network.enable_ipv6": "true"
+            }
+          }
+        }
+
+  # As per: <https://github.com/quic-go/quic-go/wiki/UDP-Buffer-Sizes>
+  - path: /etc/sysctl.d/quic-udp-increase.conf
+    mode: 420
+    contents:
+      inline: |
+        net.core.rmem_max=7500000
+        net.core.wmem_max=7500000
+
+systemd:
+  units:
+  - name: nextcloud-aio.service
+    enabled: true
+    contents: |
+      [Unit]
+      Description=Nextcloud All-in-One Container
+      After=docker.service coreos-metadata.service
+      Requires=docker.service coreos-metadata.service
+
+      [Service]
+      EnvironmentFile=/run/metadata/flatcar
+      TimeoutStartSec=0
+      ExecStart=docker run \
+        --init \
+        --sig-proxy=false \
+        --name nextcloud-aio-mastercontainer \
+        --restart always \
+        --publish 80:80 \
+        --publish 8080:8080 \
+        --publish 8443:8443 \
+        --volume nextcloud_aio_mastercontainer:/mnt/docker-aio-config \
+        --volume /var/run/docker.sock:/var/run/docker.sock:ro \
+        ghcr.io/nextcloud-releases/all-in-one:latest
+      ExecStop=/usr/bin/docker stop nextcloud-aio-mastercontainer
+      Restart=always
+      RestartSec=5s
+
+      [Install]
+      WantedBy=multi-user.target
