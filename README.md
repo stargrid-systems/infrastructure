@@ -15,7 +15,7 @@ It's cheap and we only really need it for sending emails from various services.
 
 Hosts Nextcloud AIO instance.
 
-#### Manual Setup
+#### Manual setup
 
 The first setup of Nextcloud AIO requires some manual steps (This should only be required once).
 After setting completing the AIO setup, there were some additional config steps on the machine via
@@ -47,6 +47,16 @@ $occ config:system:set objectstore arguments secret --value '<snip>'
 
 $occ maintenance:repair
 $occ maintenance:mode --off
+```
+
+#### Adding mail accounts
+
+```bash
+APP_CODE='<SNIP>' ACCOUNT='<SNIP>' USERNAME='<SNIP>' NAME='<SNIP>'; \
+$occ mail:account:create "$ACCOUNT" "$NAME" "${USERNAME}@stargrid.systems" \
+    'imap.purelymail.com' '993' 'ssl' "${USERNAME}@stargrid.systems" "$APP_CODE" \
+    'smtp.purelymail.com' '587' 'tls' "${USERNAME}@stargrid.systems" "$APP_CODE" \
+    'password'
 ```
 
 ## License
