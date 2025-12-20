@@ -9,7 +9,7 @@ packer {
 
 variable "channel" {
   type    = string
-  default = "beta"
+  default = "stable"
 }
 
 variable "hcloud_token" {
