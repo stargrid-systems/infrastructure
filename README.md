@@ -45,6 +45,9 @@ $occ config:system:set objectstore arguments region --value 'nbg1'
 $occ config:system:set objectstore arguments key --value '<snip>'
 $occ config:system:set objectstore arguments secret --value '<snip>'
 
+# Disable Skeleton directory
+$occ config:system:set skeletondirectory --value ''
+
 $occ maintenance:repair
 $occ maintenance:mode --off
 ```
