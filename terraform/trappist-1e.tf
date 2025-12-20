@@ -64,21 +64,22 @@ data "hcloud_image" "flatcar" {
 }
 
 data "ct_config" "trappist1e" {
-  content      = file("trappist-1e/base.yaml")
+  content      = file("butane/trappist-1e.yaml")
   strict       = true
   pretty_print = false
 
   snippets = [
-    templatefile("trappist-1e/ephemeral1-filesystem.yaml.tftpl", {
+    file("butane/base.yaml"),
+    templatefile("butane/ephemeral1-filesystem.yaml.tftpl", {
       volume_linux_device = hcloud_volume.trappist1e.linux_device,
     }),
-    file("trappist-1e/docker-mount.yaml"),
+    file("butane/docker-mount.yaml"),
   ]
 }
 
 resource "hcloud_ssh_key" "trappist1e" {
   name       = "trappist-1e"
-  public_key = file("trappist-1e/trappist-1e.pub")
+  public_key = file("butane/trappist-1e.pub")
 }
 
 # Docker data volume
