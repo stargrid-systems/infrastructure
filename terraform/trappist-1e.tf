@@ -114,10 +114,14 @@ resource "hcloud_server" "trappist1e" {
   firewall_ids             = [hcloud_firewall.trappist1e.id]
   shutdown_before_deletion = true
 
-  # For now we manually manage changes to user_data.
-  # This is mainly because re-creating the server changes the IP, which is a pain because of DNS caching.
   lifecycle {
-    ignore_changes = [user_data]
+    ignore_changes = [
+      # For now we manually manage changes to user_data.
+      # This is mainly because re-creating the server changes the IP, which is a pain because of DNS caching.
+      user_data,
+      # Flatcar is self-updating
+      image,
+    ]
   }
 }
 

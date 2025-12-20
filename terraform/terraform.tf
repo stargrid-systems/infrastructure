@@ -12,7 +12,7 @@ terraform {
 
     hcloud = {
       source  = "hetznercloud/hcloud"
-      version = "~> 1.56"
+      version = "~> 1.57"
     }
 
     # Used for Hetzner Cloud S3 storage.
@@ -24,7 +24,7 @@ terraform {
   }
 
   backend "s3" {
-    key = "infrastructure/terraform.tfstate"
+    key          = "infrastructure/terraform.tfstate"
     use_lockfile = true
 
     endpoints = {
