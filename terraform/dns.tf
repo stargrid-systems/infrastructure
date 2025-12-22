@@ -82,3 +82,11 @@ resource "cloudflare_dns_record" "stargrid_systems_txt_purelymail_verification" 
   type    = "TXT"
   content = "\"purelymail_ownership_proof=d425cec1c0ada0c27b67f06253e9ac41253e153de82f0816d98320749ee44bd26815d6dfc3eca8964df49b5417137a776ec47b69357537846c8b74a54d7e3cf6\""
 }
+
+resource "cloudflare_zone" "stargrid_modules" {
+  account = {
+    id = var.cloudflare_account_id
+  }
+  name = "stargrid-modules.de"
+  type = "full"
+}

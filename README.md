@@ -9,6 +9,10 @@ Registered and managed via [Cloudflare](https://cloudflare.com).
 Email server is [Purelymail](https://purelymail.com).
 It's cheap and we only really need it for sending emails from various services.
 
+### `stargrid-modules.de`
+
+Registered via [Hetzner's Domain Registration Robot](https://docs.hetzner.com/robot/domain-registration-robot) and managed via [Cloudflare](https://cloudflare.com).
+
 ## Servers
 
 ### `trappist-1e.private.stargrid.systems`
