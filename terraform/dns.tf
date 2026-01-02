@@ -90,3 +90,19 @@ resource "cloudflare_zone" "stargrid_modules" {
   name = "stargrid-modules.de"
   type = "full"
 }
+
+resource "cloudflare_dns_record" "stargrid_systems_cname_apex" {
+  zone_id = cloudflare_zone.stargrid_systems.id
+  type    = "CNAME"
+  name    = "@"
+  content = "stargrid-systems.github.io"
+  ttl     = 1
+}
+
+resource "cloudflare_dns_record" "stargrid_systems_cname_www" {
+  zone_id = cloudflare_zone.stargrid_systems.id
+  type    = "CNAME"
+  name    = "www"
+  content = "stargrid-systems.github.io"
+  ttl     = 1
+}
