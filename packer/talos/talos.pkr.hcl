@@ -25,7 +25,7 @@ variable "server_location" {
 
 locals {
   schematic_id = jsondecode(data.http.schematic.body).id
-  image_url    = "https://factory.talos.dev/image/${local.schematic_id}/${var.version}/hcloud-arm64.raw.xz"
+  image_url    = "https://factory.talos.dev/image/${local.schematic_id}/${var.version}/hcloud-amd64.raw.xz"
 }
 
 data "http" "schematic" {
@@ -63,7 +63,6 @@ build {
       "wget --timeout=5 --waitretry=5 --tries=5 --retry-connrefused --inet4-only -O /tmp/talos.raw.xz '${local.image_url}'",
       "xz -d -c /tmp/talos.raw.xz | dd of=/dev/sda",
       "sync",
-      "rm -rf /etc/ssh/ssh_host_*",
     ]
   }
 }
