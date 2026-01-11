@@ -57,7 +57,7 @@ resource "hcloud_firewall" "trappist1e" {
 }
 
 # This snapshot is created from this repository.
-# See: <flatcar-image/README.md> for more information.
+# See: <packer/flatcar/README.md> for more information.
 data "hcloud_image" "flatcar" {
   with_selector = "os=flatcar"
   most_recent   = true
