@@ -22,7 +22,5 @@ talosctl bootstrap --nodes "${PLEIADES_C1_IP:?}"
 talosctl kubeconfig --nodes "${PLEIADES_C1_IP:?}"
 ```
 
-Kubernetes is now up and running.
-
-```bash
-```
+Kubernetes is now up and running although not functional yet.
+Head over to <https://github.com/stargrid-systems/pleiades-gitops> now.
