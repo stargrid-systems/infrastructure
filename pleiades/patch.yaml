@@ -1,0 +1,15 @@
+cluster:
+  allowSchedulingOnControlPlanes: true
+  clusterName: pleiades.stargrid.systems
+  externalCloudProvider:
+    enabled: true
+
+machine:
+  kubelet:
+    extraArgs:
+      rotate-server-certificates: true
+  time:
+    servers:
+    - ntp1.hetzner.de
+    - ntp2.hetzner.com
+    - ntp3.hetzner.net
