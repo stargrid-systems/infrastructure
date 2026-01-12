@@ -1,12 +1,13 @@
 cluster:
   allowSchedulingOnControlPlanes: true
   clusterName: pleiades.stargrid.systems
-  network:
-    dnsDomain: local.pleiades.stargrid.systems
   externalCloudProvider:
     enabled: true
 
 machine:
+  kubelet:
+    extraArgs:
+      rotate-server-certificates: true
   time:
     servers:
     - ntp1.hetzner.de

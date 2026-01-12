@@ -57,13 +57,13 @@ resource "cloudflare_dns_record" "pleiades_ipv4" {
   type    = "A"
   name    = "kube.pleiades.stargrid.systems"
   content = hcloud_server.pleiades_c1.ipv4_address
-  ttl     = 1
+  ttl     = 60
 }
 
-# resource "cloudflare_dns_record" "pleiades_ipv6" {
-#   zone_id = cloudflare_zone.stargrid_systems.id
-#   type    = "AAAA"
-#   name    = "kube.pleiades.stargrid.systems"
-#   content = hcloud_server.pleiades_c1.ipv6_address
-#   ttl     = 1
-# }
+resource "cloudflare_dns_record" "pleiades_ipv6" {
+  zone_id = cloudflare_zone.stargrid_systems.id
+  type    = "AAAA"
+  name    = "kube.pleiades.stargrid.systems"
+  content = hcloud_server.pleiades_c1.ipv6_address
+  ttl     = 60
+}
