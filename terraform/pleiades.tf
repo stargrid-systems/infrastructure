@@ -29,6 +29,31 @@ resource "hcloud_firewall" "pleiades" {
       "::/0"
     ]
   }
+
+  rule {
+    description = "Allow traffic to HTTP"
+    direction   = "in"
+    protocol    = "tcp"
+    port        = "80"
+    source_ips = [
+      "0.0.0.0/0",
+      "::/0"
+    ]
+  }
+
+  dynamic "rule" {
+    for_each = ["tcp", "udp"]
+    content {
+      description = "Allow traffic to HTTPS"
+      direction   = "in"
+      protocol    = rule.value
+      port        = "443"
+      source_ips = [
+        "0.0.0.0/0",
+        "::/0"
+      ]
+    }
+  }
 }
 
 resource "hcloud_server" "pleiades_c1" {
