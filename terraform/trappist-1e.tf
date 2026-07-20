@@ -84,8 +84,9 @@ resource "hcloud_ssh_key" "trappist1e" {
 
 # Docker data volume
 resource "hcloud_volume" "trappist1e" {
-  name = "trappist-1e"
-  size = 128
+  name              = "trappist-1e"
+  delete_protection = true
+  size              = 128
   # We can't attach the volume directly to avoid a cycle.
   location = var.default_location
   format   = "ext4"
